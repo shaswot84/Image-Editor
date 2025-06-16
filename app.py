@@ -218,8 +218,10 @@ if uploaded_file is not None:
     if edited_image is not None:
         st.image(convert_to_pil_image(edited_image), caption='Edited Image', use_container_width=True)
       
-        
-        edited_image_bytes = convert_to_bytes(edited_image[:,:,[2,1,0]])   # conversion to RGB from BGR other wise bluish image would be downloaded
+        if len(edited_image.shape) ==3:
+            edited_image_bytes = convert_to_bytes(edited_image[:,:,[2,1,0]])   # conversion to RGB from BGR other wise bluish image would be downloaded
+        else:
+            edited_image_bytes =  convert_to_bytes(edited_image)
         # Add download button
         st.download_button(
             label="Download Edited Image",
