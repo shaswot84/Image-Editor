@@ -2,6 +2,7 @@ import streamlit as st
 import cv2
 import numpy as np
 from PIL import Image
+import io
 
 class ImageProcessor:
     def __init__(self, image):
@@ -128,7 +129,14 @@ def convert_to_pil_image(image):
     else:
         raise ValueError("Unsupported image shape")
 
-# Main Streamlit app
+# Helper function to convert NumPy array to bytes
+def convert_to_bytes(image):
+    if len(image.shape) == 2:  # Grayscale image
+        _, buffer = cv2.imencode('.png', image)
+    else:  # Color image
+        _, buffer = cv2.imencode('.png', cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
+    return buffer.tobytes()
+
 st.title("Image Editing App")
 edited_image = None
 
@@ -141,7 +149,7 @@ if uploaded_file is not None:
     # Convert RGB to BGR for OpenCV operations
     image_bgr = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
 
-    st.image(convert_to_pil_image(image_bgr), caption='Original Image', use_container_width=True)
+    st.image(convert_to_pil_image(image_bgr), caption='Original Image', use_column_width=True)
 
     st.sidebar.header("Select Operation Category")
     category = st.sidebar.selectbox("Choose a category", ["Basic Operations", "Filtering", "Morphology", "Contours"])
@@ -209,6 +217,16 @@ if uploaded_file is not None:
 
     if edited_image is not None:
         st.image(convert_to_pil_image(edited_image), caption='Edited Image', use_container_width=True)
+      
+        
+        edited_image_bytes = convert_to_bytes(edited_image[:,:,[2,1,0]])   # conversion to RGB from BGR other wise bluish image would be downloaded
+        # Add download button
+        st.download_button(
+            label="Download Edited Image",
+            data=edited_image_bytes,
+            file_name="edited_image.png",
+            mime="image/png"
+        )
 
 else:
     st.write("Please upload an image to edit.")
